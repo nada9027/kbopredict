@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚾ 야구 순위 예측 멀티플레이어 게임 ⚾</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom animation for results display */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-4 flex flex-col items-center">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-5xl w-full border border-gray-200">
+        <h1 class="text-4xl font-extrabold text-center text-blue-800 mb-6 drop-shadow-sm">⚾ 야구 순위 예측 멀티플레이어 게임 ⚾</h1>
+        <p class="text-center text-gray-700 mb-8 text-lg leading-relaxed">
+            실제 순위를 수동으로 입력하고, 여러 명의 친구들과 함께 예상 순위를 맞춰 점수를 겨뤄보세요!
+        </p>
+
+        <!-- Message Display -->
+        <div id="message-display" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-6 text-center text-lg shadow-inner" role="alert">
+            <span id="message-text" class="block sm:inline"></span>
+        </div>
+
+        <!-- Actual Baseball Ranking Input Section -->
+        <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 shadow-md mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                실제 야구 순위 입력 (정확한 팀 이름을 입력하세요)
+            </h2>
+
+            <div id="actual-ranking-inputs" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-gray-800 text-lg mt-6">
+                <!-- Actual ranking input fields will be rendered here by JavaScript -->
+            </div>
+            
+            <!-- Datalist for KBO team names for autocomplete -->
+            <datalist id="kbo-teams-datalist">
+                <!-- Options will be added by JavaScript -->
+            </datalist>
+        </div>
+
+        <!-- Participant Predicted Ranking Input Section -->
+        <div class="bg-green-50 p-6 rounded-xl border border-green-200 shadow-md mb-8">
+            <h2 class="text-2xl font-bold text-green-700 mb-4 flex items-center justify-between">
+                <span class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM12 11c0 1.656-1.554 3-3.472 3H5.472C3.554 14 2 12.656 2 11V7a2 2 0 012-2h4a2 2 0 012 2v4z" />
+                    </svg>
+                    참가자 예상 순위 입력
+                </span>
+                <div class="flex space-x-2">
+                    <button id="add-participant-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105 active:scale-95 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        참가자 추가
+                    </button>
+                </div>
+            </h2>
+
+            <div id="participants-container" class="space-y-6 mt-6">
+                <!-- Participant input sections will be rendered here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Calculate Total Scores Button -->
+        <div class="text-center mb-10">
+            <button id="calculate-scores-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 active:scale-95 flex items-center justify-center mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.79 2-4 2s-4-.895-4-2 1.79-2 4-2 4 .895 4 2zm0 0V6m0 6a2 2 0 100 4 2 2 0 000-4zm-2 4a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+                총 점수 계산
+            </button>
+        </div>
+
+        <!-- Results Display -->
+        <div id="results-display" class="hidden bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-lg">
+            <!-- Results will be rendered here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const KBO_TEAMS = [
+            'KIA 타이거즈', '두산 베어스', 'LG 트윈스', 'NC 다이노스', '롯데 자이언츠',
+            'SSG 랜더스', 'KT 위즈', '삼성 라이온즈', '한화 이글스', '키움 히어로즈',
+        ];
+
+        // Global state variables
+        let actualRankingInput = Array(KBO_TEAMS.length).fill('');
+        let participants = [];
+        let nextParticipantId = 1;
+        let message = '';
+
+        // DOM elements
+        const messageDisplay = document.getElementById('message-display');
+        const messageText = document.getElementById('message-text');
+        const actualRankingInputsContainer = document.getElementById('actual-ranking-inputs');
+        const kboTeamsDatalist = document.getElementById('kbo-teams-datalist');
+        const participantsContainer = document.getElementById('participants-container');
+        const addParticipantBtn = document.getElementById('add-participant-btn');
+        const calculateScoresBtn = document.getElementById('calculate-scores-btn');
+        const resultsDisplay = document.getElementById('results-display');
+
+        // Helper function to create a ranking object from simplified input
+        const createRanking = (teamsAndRanks) => {
+            const ranking = {};
+            teamsAndRanks.forEach(([teamAbbr, rank]) => {
+                let fullTeamName = '';
+                switch (teamAbbr) {
+                    case '기아': fullTeamName = 'KIA 타이거즈'; break;
+                    case 'LG': fullTeamName = 'LG 트윈스'; break;
+                    case '삼성': fullTeamName = '삼성 라이온즈'; break;
+                    case '한화': fullTeamName = '한화 이글스'; break;
+                    case 'KT': fullTeamName = 'KT 위즈'; break;
+                    case '두산': fullTeamName = '두산 베어스'; break;
+                    case 'SSG': fullTeamName = 'SSG 랜더스'; break;
+                    case '롯데': fullTeamName = '롯데 자이언츠'; break;
+                    case 'NC': fullTeamName = 'NC 다이노스'; break;
+                    case '키움': fullTeamName = '키움 히어로즈'; break;
+                    case 'ssg': fullTeamName = 'SSG 랜더스'; break;
+                    case 'nc': fullTeamName = 'NC 다이노스'; break;
+                    case 'kt': fullTeamName = 'KT 위즈'; break;
+                    case 'lg': fullTeamName = 'LG 트윈스'; break;
+                    default: fullTeamName = teamAbbr;
+                }
+                ranking[fullTeamName] = rank;
+            });
+            return ranking;
+        };
+
+        // Initialize participants with provided data
+        function initializeParticipants() {
+            participants = [
+                {
+                    id: 1,
+                    name: '이원기',
+                    userRanking: createRanking([
+                        ['기아', 1], ['LG', 2], ['삼성', 3], ['한화', 4], ['KT', 5],
+                        ['두산', 6], ['SSG', 7], ['롯데', 8], ['NC', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 2,
+                    name: '구창모',
+                    userRanking: createRanking([
+                        ['기아', 1], ['LG', 2], ['삼성', 3], ['ssg', 4], ['한화', 5],
+                        ['두산', 6], ['롯데', 7], ['nc', 8], ['키움', 9], ['kt', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 3,
+                    name: '진서영',
+                    userRanking: createRanking([
+                        ['기아', 1], ['삼성', 2], ['한화', 3], ['lg', 4], ['kt', 5],
+                        ['두산', 6], ['롯데', 7], ['ssg', 8], ['nc', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 4,
+                    name: '이동주',
+                    userRanking: createRanking([
+                        ['기아', 1], ['삼성', 2], ['lg', 3], ['한화', 4], ['두산', 5],
+                        ['kt', 6], ['ssg', 7], ['키움', 8], ['롯데', 9], ['nc', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 5,
+                    name: '지영복',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['한화', 5],
+                        ['두산', 6], ['ssg', 7], ['롯데', 8], ['nc', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 6,
+                    name: '김용호',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['한화', 5],
+                        ['롯데', 6], ['두산', 7], ['ssg', 8], ['NC', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 7,
+                    name: '박성준',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['두산', 5],
+                        ['한화', 6], ['롯데', 7], ['ssg', 8], ['nc', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 8,
+                    name: '김병주',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['kt', 3], ['삼성', 4], ['두산', 5],
+                        ['ssg', 6], ['한화', 7], ['nc', 8], ['롯데', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 9,
+                    name: '윤지원',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['kt', 3], ['두산', 4], ['ssg', 5],
+                        ['nc', 6], ['삼성', 7], ['한화', 8], ['롯데', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 10,
+                    name: '이병준',
+                    userRanking: createRanking([
+                        ['기아', 1], ['kt', 2], ['lg', 3], ['두산', 4], ['삼성', 5],
+                        ['ssg', 6], ['롯데', 7], ['nc', 8], ['한화', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 11,
+                    name: '오승석',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['한화', 5],
+                        ['두산', 6], ['ssg', 7], ['롯데', 8], ['nc', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 12,
+                    name: '임종민',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['한화', 5],
+                        ['두산', 6], ['ssg', 7], ['nc', 8], ['롯데', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+                {
+                    id: 13,
+                    name: '박상기',
+                    userRanking: createRanking([
+                        ['기아', 1], ['lg', 2], ['삼성', 3], ['kt', 4], ['한화', 5],
+                        ['두산', 6], ['롯데', 7], ['ssg', 8], ['nc', 9], ['키움', 10]
+                    ]),
+                    individualScores: [], totalScore: 0,
+                },
+            ];
+            nextParticipantId = participants.length + 1;
+        }
+
+        // Function to display messages
+        function updateMessage(msg, type = 'error') {
+            message = msg;
+            messageText.textContent = msg;
+            messageDisplay.classList.remove('hidden');
+            if (type === 'error') {
+                messageDisplay.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
+                messageDisplay.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else if (type === 'success') {
+                messageDisplay.classList.remove('bg-red-100', 'border-red-400', 'text-red-700');
+                messageDisplay.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            }
+        }
+
+        // Function to hide messages
+        function hideMessage() {
+            message = '';
+            messageDisplay.classList.add('hidden');
+        }
+
+        // Render actual ranking input fields
+        function renderActualRankingInputs() {
+            actualRankingInputsContainer.innerHTML = ''; // Clear previous inputs
+            KBO_TEAMS.forEach((_, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-white p-2 rounded-lg border border-gray-200';
+                div.innerHTML = `
+                    <label for="actual-rank-${index}" class="flex-grow mr-2 truncate">${index + 1}위:</label>
+                    <input
+                        id="actual-rank-${index}"
+                        type="text"
+                        value="${actualRankingInput[index]}"
+                        onchange="handleActualRankingChange(${index}, this.value)"
+                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-transparent text-center"
+                        placeholder="팀 이름"
+                        list="kbo-teams-datalist"
+                    />
+                `;
+                actualRankingInputsContainer.appendChild(div);
+            });
+
+            // Populate datalist
+            kboTeamsDatalist.innerHTML = '';
+            KBO_TEAMS.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                kboTeamsDatalist.appendChild(option);
+            });
+        }
+
+        // Handle change for actual ranking input
+        function handleActualRankingChange(index, value) {
+            actualRankingInput[index] = value;
+            hideMessage(); // Clear message on new input
+        }
+
+        // Render participant input sections
+        function renderParticipants() {
+            participantsContainer.innerHTML = ''; // Clear previous participants
+            participants.forEach(participant => {
+                const participantDiv = document.createElement('div');
+                participantDiv.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm relative';
+                participantDiv.innerHTML = `
+                    <button
+                        onclick="removeParticipant(${participant.id})"
+                        class="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-sm font-bold"
+                        aria-label="참가자 제거"
+                    >
+                        X
+                    </button>
+                    <div class="mb-4">
+                        <label for="participant-name-${participant.id}" class="block text-gray-700 text-lg font-semibold mb-2">참가자 이름:</label>
+                        <input
+                            id="participant-name-${participant.id}"
+                            type="text"
+                            value="${participant.name}"
+                            onchange="handleParticipantNameChange(${participant.id}, this.value)"
+                            class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 focus:border-transparent text-lg"
+                            placeholder="참가자 이름을 입력하세요"
+                        />
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-gray-800 text-lg">
+                        ${KBO_TEAMS.map(team => `
+                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                <label for="rank-${participant.id}-${team}" class="flex-grow mr-2 truncate">${team}:</label>
+                                <input
+                                    id="rank-${participant.id}-${team}"
+                                    type="number"
+                                    min="1"
+                                    max="${KBO_TEAMS.length}"
+                                    value="${participant.userRanking[team] || ''}"
+                                    onchange="handleUserRankChange(${participant.id}, '${team}', this.value)"
+                                    class="w-20 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 focus:border-transparent text-center"
+                                    placeholder="순위"
+                                />
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                participantsContainer.appendChild(participantDiv);
+            });
+        }
+
+        // Add participant logic
+        function addParticipant() {
+            if (participants.length >= 13) {
+                updateMessage('최대 13명의 참가자만 추가할 수 있습니다.');
+                return;
+            }
+
+            const newParticipant = {
+                id: nextParticipantId,
+                name: `참가자 ${nextParticipantId}`,
+                userRanking: {}, // Initialize empty ranking for new participant
+                individualScores: [],
+                totalScore: 0,
+            };
+            KBO_TEAMS.forEach(team => {
+                newParticipant.userRanking[team] = '';
+            });
+
+            participants.push(newParticipant);
+            nextParticipantId++;
+            renderParticipants(); // Re-render to show new participant
+            hideMessage();
+        }
+
+        // Handle change for participant name input
+        function handleParticipantNameChange(id, name) {
+            const participantIndex = participants.findIndex(p => p.id === id);
+            if (participantIndex !== -1) {
+                participants[participantIndex].name = name;
+            }
+            hideMessage();
+        }
+
+        // Handle change for participant's team rank input
+        function handleUserRankChange(participantId, teamName, rank) {
+            const participantIndex = participants.findIndex(p => p.id === participantId);
+            if (participantIndex !== -1) {
+                participants[participantIndex].userRanking[teamName] = rank;
+            }
+            hideMessage();
+        }
+
+        // Remove participant logic
+        function removeParticipant(id) {
+            participants = participants.filter(p => p.id !== id);
+            renderParticipants(); // Re-render to remove participant
+            hideMessage();
+        }
+
+        // Validate actual ranking
+        function validateActualRanking() {
+            const enteredTeams = actualRankingInput.filter(team => team !== '');
+            if (enteredTeams.length !== KBO_TEAMS.length) {
+                updateMessage('실제 야구 순위의 모든 칸을 채워주세요.');
+                return false;
+            }
+
+            const uniqueTeams = new Set(enteredTeams);
+            if (uniqueTeams.size !== KBO_TEAMS.length) {
+                updateMessage('실제 야구 순위에 중복된 팀이 있습니다. 중복 없이 정확한 팀 이름을 입력해주세요.');
+                return false;
+            }
+
+            const invalidTeams = enteredTeams.filter(team => !KBO_TEAMS.includes(team));
+            if (invalidTeams.length > 0) {
+                updateMessage(`실제 야구 순위에 유효하지 않은 팀 이름이 있습니다: ${invalidTeams.join(', ')}`);
+                return false;
+            }
+            return true;
+        }
+
+        // Validate participant ranking
+        function validateParticipantRanking(participant) {
+            const allRanksEntered = KBO_TEAMS.every(team => {
+                const rank = participant.userRanking[team];
+                return rank !== '' && !isNaN(parseInt(rank, 10)) && parseInt(rank, 10) >= 1 && parseInt(rank, 10) <= KBO_TEAMS.length;
+            });
+
+            if (!allRanksEntered) {
+                updateMessage(`${participant.name}님의 모든 예상 순위를 1부터 ${KBO_TEAMS.length}까지 입력해주세요.`);
+                return false;
+            }
+
+            const enteredRanks = Object.values(participant.userRanking).map(Number);
+            const uniqueRanks = new Set(enteredRanks);
+            if (uniqueRanks.size !== KBO_TEAMS.length) {
+                updateMessage(`${participant.name}님의 예상 순위에 중복된 숫자가 있습니다.`);
+                return false;
+            }
+            return true;
+        }
+
+        // Main function to calculate all scores
+        function calculateTotalScores() {
+            if (!validateActualRanking()) {
+                resultsDisplay.classList.add('hidden'); // Hide results if validation fails
+                return;
+            }
+            if (participants.length === 0) {
+                updateMessage('점수를 계산하려면 최소 한 명의 참가자가 있어야 합니다.');
+                resultsDisplay.classList.add('hidden'); // Hide results if validation fails
+                return;
+            }
+
+            let allParticipantsValid = true;
+            const calculatedParticipants = participants.map(participant => {
+                if (!validateParticipantRanking(participant)) {
+                    allParticipantsValid = false;
+                    return { ...participant, individualScores: [], totalScore: 0 }; // Return invalid state
+                }
+
+                const individualScores = [];
+                let totalScore = 0;
+
+                KBO_TEAMS.forEach(teamName => {
+                    const userRank = parseInt(participant.userRanking[teamName], 10);
+                    const actualRank = actualRankingInput.indexOf(teamName) + 1;
+
+                    let score = 0;
+                    if (userRank === actualRank) {
+                        score = -1;
+                    } else {
+                        score = Math.abs(userRank - actualRank);
+                    }
+                    individualScores.push({ team: teamName, userRank, actualRank, score });
+                    totalScore += score;
+                });
+
+                return { ...participant, individualScores, totalScore };
+            });
+
+            if (!allParticipantsValid) {
+                resultsDisplay.classList.add('hidden'); // Hide results if any participant is invalid
+                return;
+            }
+
+            hideMessage(); // Clear message if all validations pass
+
+            // Sort participants by total score in ascending order
+            const sortedParticipants = [...calculatedParticipants].sort((a, b) => a.totalScore - b.totalScore);
+            participants = sortedParticipants; // Update global participants array with sorted data
+            renderResults(); // Render the results
+        }
+
+        // Render results
+        function renderResults() {
+            resultsDisplay.classList.remove('hidden');
+            resultsDisplay.classList.add('animate-fade-in'); // Apply animation
+
+            let resultsHtml = `
+                <h2 class="text-3xl font-bold text-yellow-700 mb-5 text-center flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    참가자 전체 순위 (총점 오름차순)
+                </h2>
+                <div class="overflow-x-auto mb-6">
+                    <table class="min-w-full bg-white rounded-lg shadow-md border border-gray-200">
+                        <thead class="bg-yellow-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-yellow-800 uppercase tracking-wider rounded-tl-lg">순위</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-yellow-800 uppercase tracking-wider">참가자 이름</th>
+                                <th class="py-3 px-4 text-center text-sm font-semibold text-yellow-800 uppercase tracking-wider rounded-tr-lg">총점</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            participants.forEach((participant, index) => {
+                resultsHtml += `
+                            <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-yellow-50'} border-b border-gray-200 last:border-b-0">
+                                <td class="py-3 px-4 text-lg font-medium text-gray-900">${index + 1}</td>
+                                <td class="py-3 px-4 text-lg text-gray-800 font-semibold">${participant.name}</td>
+                                <td class="py-3 px-4 text-center text-xl font-bold">
+                                    <span class="${participant.totalScore === -KBO_TEAMS.length ? 'text-green-600' : 'text-red-600'}">
+                                        ${participant.totalScore}점
+                                    </span>
+                                </td>
+                            </tr>
+                `;
+            });
+
+            resultsHtml += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-2xl font-bold text-yellow-700 mb-4 text-center">개별 참가자 상세 점수</h3>
+                <div class="space-y-6">
+            `;
+
+            participants.forEach(participant => {
+                resultsHtml += `
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3 text-center">
+                            ${participant.name}님의 상세 점수 (총점: ${participant.totalScore}점)
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-gray-50 rounded-lg shadow-inner border border-gray-100">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider rounded-tl-lg">팀</th>
+                                        <th class="py-2 px-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">나의 예측</th>
+                                        <th class="py-2 px-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">실제 순위</th>
+                                        <th class="py-2 px-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider rounded-tr-lg">점수</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                participant.individualScores.forEach((scoreDetail, idx) => {
+                    resultsHtml += `
+                                    <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-100'} border-b border-gray-100 last:border-b-0">
+                                        <td class="py-2 px-3 text-base font-medium text-gray-900">${scoreDetail.team}</td>
+                                        <td class="py-2 px-3 text-center text-base text-gray-700">${scoreDetail.userRank}위</td>
+                                        <td class="py-2 px-3 text-center text-base text-gray-700">${scoreDetail.actualRank}위</td>
+                                        <td class="py-2 px-3 text-center text-lg font-bold">
+                                            <span class="${scoreDetail.score === -1 ? 'text-green-600' : 'text-red-600'}">
+                                                ${scoreDetail.score}
+                                            </span>
+                                        </td>
+                                    </tr>
+                    `;
+                });
+                resultsHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsHtml += `
+                </div>
+                <p class="text-center text-gray-600 text-sm mt-4">
+                    <span class="font-bold text-green-600">-1점</span>: 예측 순위와 실제 순위가 정확히 일치<br/>
+                    <span class="font-bold text-red-600">+N점</span>: 예측 순위와 실제 순위의 차이만큼 점수 부여
+                </p>
+            `;
+            resultsDisplay.innerHTML = resultsHtml;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeParticipants();
+            renderActualRankingInputs();
+            renderParticipants();
+
+            addParticipantBtn.addEventListener('click', addParticipant);
+            calculateScoresBtn.addEventListener('click', calculateTotalScores);
+        });
+    </script>
+</body>
+</html>
